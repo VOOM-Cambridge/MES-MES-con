@@ -64,11 +64,13 @@ class messeagePublisher(multiprocessing.Process):
     def run(self):
         self.do_connect()
 
-        clientSupply = mqtt.Client()
-        #clientCustomer = mqtt.Client()
-
-        self.mqtt_connect(clientSupply, self.supplier)
-        #self.mqtt_connect(clientCustomer, self.customer)
+        if self.supplier["address"] !="":
+            clientSupply = mqtt.Client()
+            self.mqtt_connect(clientSupply, self.supplier)
+        
+        if self.customer["address"] !="":
+            clientCustomer = mqtt.Client()
+            self.mqtt_connect(clientCustomer, self.customer)
 
         run = True
         while run:
@@ -83,9 +85,11 @@ class messeagePublisher(multiprocessing.Process):
                     if reciever == self.supplier["name"]:
                         print("sending....")
                         clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
-                    elif reciever == self.customer:
+                    elif reciever == self.customer["name"]:
                         print("customer messeage")
-                        #clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
+                        clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                 except zmq.ZMQError:
                     pass
+
+                
             # client.loop(0.05)
