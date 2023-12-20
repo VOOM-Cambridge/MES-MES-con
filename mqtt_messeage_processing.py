@@ -1,0 +1,147 @@
+import multiprocessing
+import zmq
+import logging
+import json
+from enum import Enum, auto
+import freppleAPImodule
+import time
+
+context = zmq.Context()
+logger = logging.getLogger("main.message_rewriter")
+
+
+class MessageProcessing(multiprocessing.Process):
+    def __init__(self, config, zmq_conf):
+        super().__init__()
+
+        conf = config["frepple_info"]
+        self.url = conf['URL']
+        self.user = conf["user"]
+        self.password = conf["password"]
+        self.name = config["Factory"]["name"]
+
+        # declarations
+        self.zmq_conf = zmq_conf
+        self.zmq_in = None
+        self.zmq_out = None
+
+    def do_connect(self):
+        self.zmq_in = context.socket(self.zmq_conf['in']['type'])
+        if self.zmq_conf['in']["bind"]:
+            self.zmq_in.bind(self.zmq_conf['in']["address"])
+        else:
+            self.zmq_in.connect(self.zmq_conf['in']["address"])
+
+        self.zmq_out = context.socket(self.zmq_conf['out']['type'])
+        if self.zmq_conf['out']["bind"]:
+            self.zmq_out.bind(self.zmq_conf['out']["address"])
+        else:
+            self.zmq_out.connect(self.zmq_conf['out']["address"])
+
+    def run(self):
+        logger.info("Starting")
+        self.do_connect()
+        logger.info("ZMQ Connected")
+        self.frepple = freppleAPImodule.freppleConnect(self.user, self.password, self.url)
+        run = True
+        while run:
+            while self.zmq_in.poll(50, zmq.POLLIN):
+                try:
+                    msg = self.zmq_in.recv(zmq.NOBLOCK)
+                    msg_json = json.loads(msg)
+                    print("mess passed on")
+                    print(msg_json)
+                    breakUp = msg_json['topic'].replace("MES/", "").split("/")
+                    print(breakUp)
+                    reason = breakUp[2]
+                    partner = breakUp[1]
+                    if breakUp[0] == "purchase":
+                        print("purchase update")
+                        self.processPurchase(reason, partner, msg_json['payload'])
+                    elif breakUp[0] == "order":
+                        print("new order or update to order")
+                        print(reason)
+                        print(partner)
+                        self.processOrder(reason, partner, msg_json['payload'])
+                    
+                except zmq.ZMQError:
+                    pass
+    
+    def processOrder(self, reason, customer, payload):
+        if reason == "update":
+            # update orders or job first search for order 
+            orders = self.frepple.findAllOrders("open")
+            if payload["name"] in orders or payload["description"] in orders:
+                # order already exists and cna be updated
+                self.frepple.ordersIn("EDIT", payload)
+                print("order updated")
+                self.runUpdates()
+            # elif reason == "confirm":
+            #     self.frepple.ordersIn("EDIT", payload)
+            #     self.runUpdates()
+            else:
+                reason == "new"
+        if reason == "new":
+            # create a new order in the MES
+            print("started")
+            output = self.frepple.ordersIn("ADD", payload)
+            print(output)
+            print("new added")
+            self.runUpdates()
+
+    def processPurchase(self, reason, customer, payload):
+        if reason == "update":
+            # update orders or job first search for order 
+            purchases = self.frepple.findAllPurchaseOrders("confirmed")
+            if payload["name"] in purchases or payload["description"] in purchases:
+                # purchse already exists and confiremd and can be updated
+                self.frepple.purchaseOrderFunc("EDIT", payload)
+                print("purchase updated")
+                self.runUpdates()
+
+            purchases = self.frepple.findAllPurchaseOrders("proposed")
+            if payload["name"] in purchases or payload["description"] in purchases:
+                # purchase already exists and not confirmed yet and can be upadtes
+                self.frepple.purchaseOrderFunc("EDIT", payload)
+                print("purchase updated")
+                self.runUpdates()
+        elif reason == "confirm":
+            self.frepple.purchaseOrderFunc("EDIT", payload)
+            self.runUpdates()
+
+    def runUpdates(self):
+        # collect all order information before on delivery data and status
+        startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate" "status"])
+        self.frepple.runPlan()
+        print("plan run")
+        time.sleep(2)
+        endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate" "status"])
+        dateToUpdate =[]
+        for data in endOrderData:
+            if data not in startOrderData:
+                if data[0] in startOrderData:
+                    # end date of order has changed but the order is still there
+                    dateToUpdate.append(data)
+                elif data[0] not in startOrderData:
+                    # new order
+                    dateToUpdate.append(data)
+        
+        for data in dateToUpdate:
+            # get new data for order send out data
+            info = self.frepple.ordersIn("GET", {"name": data[0]})
+            if info != []:
+            # send on messeage to cusotmer of that order
+                topic = "MES/purchase/"+ self.name +"/update"
+                keys_list = ["item", "quantity"]
+                payload = {key: info[key] for key in keys_list}
+                payload["reference"] = info["name"]
+                payload["status"] = "confirmed"  # assume it is confirmed if returning a messeage or edit
+                payload["enddate"] = info["deliverydate"]
+                try:
+                    self.zmq_out.send_json({'send to': info["customer"], 'topic': topic, 'payload': payload})
+                except zmq.ZMQError:
+                    pass
+
+    
+                    
+        
