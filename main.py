@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG)  # move to log config file using python
 
 
 def get_config():
-    with open("./MES-MES-com/config/config.toml", "rb") as f:
+    with open("./config/config.toml", "rb") as f:
         toml_conf = tomli.load(f)
     logger.info(f"config:{toml_conf}")
     return toml_conf
