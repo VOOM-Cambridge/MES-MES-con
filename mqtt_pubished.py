@@ -82,10 +82,10 @@ class messeagePublisher(multiprocessing.Process):
                     msg_payload = msg_json['payload']
                     reciever = msg_json["send to"]
                     #logger.debug(f'pub topic:{msg_topic} msg:{msg_payload}')
-                    if reciever == self.supplier["name"]:
+                    if reciever == self.supplier["name"] and self.supplier["address"] !="":
                         print("sending....")
                         clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
-                    elif reciever == self.customer["name"]:
+                    elif reciever == self.customer["name"] and self.customer["address"] !="":
                         print("customer messeage")
                         clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                 except zmq.ZMQError:
