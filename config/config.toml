@@ -3,12 +3,12 @@ name = "3D Printing Factory" #"3D Printing or Robot Lab"
 frequencyCheck = 5 #seconds
 
 [frepple_info]
-URL = "http://localhost:9000"
+URL = "http://129.169.48.175:9000"
 password = "admin"
 user ="admin"
 
 [mqtt_subsciber]
-    broker = "localhost"  #point to the mqtt broker same ad frepple IP address
+    broker = "129.169.48.175"  #point to the mqtt broker same ad frepple IP address
     port = 1883
 
 [[mqtt_subsciber.subscription]]
@@ -30,11 +30,11 @@ user ="admin"
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
 name = "ABS material supplier"
-address = "129.169.232.174" #"129.169.232.174"
+address = "" #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot Assembly Factory"
-address = "129.169.48.176"
+name = "3D Printing Factory"
+address = "129.169.48.173"
 port = 1883

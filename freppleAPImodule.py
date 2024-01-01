@@ -115,6 +115,11 @@ class freppleConnect:
             "quantity": "0",
             "priority": "100",
             } # some default values are added to prevent errors
+        
+        # if new order in to add make default addition as quote
+        if process == "ADD":
+            payload["status"] = "quote"
+        
         return self.runProcess(process, payload, data, url)
 
     # Function to change items 

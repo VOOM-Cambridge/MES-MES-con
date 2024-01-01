@@ -111,11 +111,11 @@ class MessageProcessing(multiprocessing.Process):
 
     def runUpdates(self):
         # collect all order information before on delivery data and status
-        startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate" "status"])
+        startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         self.frepple.runPlan()
         print("plan run")
         time.sleep(2)
-        endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate" "status"])
+        endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         dateToUpdate =[]
         for data in endOrderData:
             if data not in startOrderData:

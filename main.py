@@ -46,7 +46,7 @@ def create_building_blocks(config):
     publish_mqtt = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4001", "bind": True}
 
     bbs["mqtt_subscriber"] = mqtt_subscriber.MQTTSubscriber(config, mqtt_out_forward)
-    bbs["MES_order_check"] = MESCheckOrder.FreppleCheckerOrders(config, {'internal': mqtt_out_forward, 'out': MESCheckOut})
+    bbs["MES_order_check"] = MESCheckOrder.FreppleCheckerOrders(config, {'internal': MESIncomingProcOut, 'out': MESCheckOut})
     bbs["process_incoming"] = mqtt_messeage_processing.MessageProcessing(config, {'in': MESIncomingProcIn, 'out': MESIncomingProcOut})
     bbs["mqtt_publish"] = mqtt_pubished.messeagePublisher(config, publish_mqtt)
 
