@@ -49,20 +49,22 @@ class MessageProcessing(multiprocessing.Process):
                 try:
                     msg = self.zmq_in.recv(zmq.NOBLOCK)
                     msg_json = json.loads(msg)
-                    print("mess passed on")
+                    print("MQTT_processing: mess passed on")
                     print(msg_json)
                     breakUp = msg_json['topic'].replace("MES/", "").split("/")
                     print(breakUp)
                     reason = breakUp[2]
                     partner = breakUp[1]
                     if breakUp[0] == "purchase":
-                        print("purchase update")
+                        print("MQTT_processing: purchase update")
                         self.processPurchase(reason, partner, msg_json['payload'])
                     elif breakUp[0] == "order":
-                        print("new order or update to order")
+                        print("MQTT_processing: new order or update to order")
                         print(reason)
                         print(partner)
                         self.processOrder(reason, partner, msg_json['payload'])
+                    
+                    
                     
                 except zmq.ZMQError:
                     pass
@@ -74,46 +76,62 @@ class MessageProcessing(multiprocessing.Process):
             if payload["name"] in orders or payload["description"] in orders:
                 # order already exists and cna be updated
                 self.frepple.ordersIn("EDIT", payload)
-                print("order updated")
+                print("MQTT_processing: order updated")
                 self.runUpdates()
             # elif reason == "confirm":
             #     self.frepple.ordersIn("EDIT", payload)
-            #     self.runUpdates()
+            #     self.runUpdates()   
             else:
                 reason == "new"
+        elif reason == "infomation":
+            print("MQTT_processing: update requested on order status resending info")
+            self.resendInfo(payload["name"], customer)
         if reason == "new":
             # create a new order in the MES
-            print("started")
+            print("MQTT_processing: started new addition")
             output = self.frepple.ordersIn("ADD", payload)
             print(output)
-            print("new added")
+            print("MQTT_processing: new added")
             self.runUpdates()
 
-    def processPurchase(self, reason, customer, payload):
+    def processPurchase(self, reason, supplier, payload):
         if reason == "update":
             # update orders or job first search for order 
             purchases = self.frepple.findAllPurchaseOrders("confirmed")
             if payload["name"] in purchases or payload["description"] in purchases:
                 # purchse already exists and confiremd and can be updated
                 self.frepple.purchaseOrderFunc("EDIT", payload)
-                print("purchase updated")
+                print("purchase updated from confirmed")
                 self.runUpdates()
 
             purchases = self.frepple.findAllPurchaseOrders("proposed")
             if payload["name"] in purchases or payload["description"] in purchases:
                 # purchase already exists and not confirmed yet and can be upadtes
                 self.frepple.purchaseOrderFunc("EDIT", payload)
-                print("purchase updated")
+                print("MQTT_processing: purchase updated from proposed")
                 self.runUpdates()
         elif reason == "confirm":
             self.frepple.purchaseOrderFunc("EDIT", payload)
             self.runUpdates()
+    
+    def resendInfo(self, order, customer):
+
+        info = self.frepple.ordersIn("GET", order)
+        if info and info !=[]:
+            payload = self.messageChangeForCustomer(info)
+            topic = "MES/purchase/"+ self.name +"/update/"
+            
+            try:
+                self.zmq_out.send_json({'send to': customer, 'topic': topic, 'payload': payload})
+            except zmq.ZMQError:
+                print("MQTT_processing: Error sending messeage on")
+                pass
 
     def runUpdates(self):
         # collect all order information before on delivery data and status
         startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         self.frepple.runPlan()
-        print("plan run")
+        print("MQTT_processing: plan run")
         time.sleep(2)
         endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         dateToUpdate =[]
@@ -130,18 +148,43 @@ class MessageProcessing(multiprocessing.Process):
             # get new data for order send out data
             info = self.frepple.ordersIn("GET", {"name": data[0]})
             if info != []:
-            # send on messeage to cusotmer of that order
-                topic = "MES/purchase/"+ self.name +"/update"
+            # send on messeage to cusotmer of that order - only customer needs updating others detemined by supplier
+                payload = self.messageChangeForCustomer(info)
+                topic = "MES/purchase/"+ self.name +"/update/"
                 keys_list = ["item", "quantity"]
-                payload = {key: info[key] for key in keys_list}
-                payload["reference"] = info["name"]
-                payload["status"] = "confirmed"  # assume it is confirmed if returning a messeage or edit
-                payload["enddate"] = info["deliverydate"]
+                # payload = {key: info[key] for key in keys_list}
+                # payload["reference"] = info["name"]
+                # payload["status"] = "confirmed"  # assume it is confirmed if returning a messeage or edit
+                # payload["enddate"] = info["deliverydate"]
                 try:
                     self.zmq_out.send_json({'send to': info["customer"], 'topic': topic, 'payload': payload})
                 except zmq.ZMQError:
+                    print("MQTT_processing: Error sending messeage on")
                     pass
-
+    
+    def messageChangeForSupplier(self, orderInfo):
+        newMess ={}
+        newMess["name"] =  orderInfo["reference"] # order number from purchase order number 
+        newMess["item"] = orderInfo["item"] # what is being ordered 
+        newMess["customer"] = self.name # name of current factory 
+        newMess["quantity"] = orderInfo["quantity"] # quantity needed in purchase order
+        newMess["description"] = "" # any other details needed
+        newMess["due"] = orderInfo["enddate"]
+        newMess["priority"] = orderInfo["priority"] # default is 1
+        newMess["location"] = "Goods Out"
+        return newMess
+    
+    def messageChangeForCustomer(self, orderInfo):
+        # reverse of above function
+        newMess ={}
+        newMess["reference"] =  orderInfo["name"]  
+        newMess["item"] = orderInfo["item"] 
+        newMess["supplier"] = self.name 
+        newMess["quantity"] = orderInfo["quantity"] 
+        newMess["enddate"] = orderInfo["due"]
+        newMess["priority"] = orderInfo["priority"] 
+        newMess["location"] = "Goods In"
+        return newMess
     
                     
         

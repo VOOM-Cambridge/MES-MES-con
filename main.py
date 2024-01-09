@@ -33,12 +33,6 @@ def config_valid(config):
 def create_building_blocks(config):
     bbs = {}
 
-    # mqtt_out = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4000", "bind": True}
-    # topic_rewrite_in = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4000", "bind": False}
-    # topic_rewrite_out = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4002", "bind": True}
-    # message_rewrite_in = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4002", "bind": False}
-    # message_rewrite_out = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4001", "bind": True}
-    # publisher_in = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4001", "bind": False}
     mqtt_out_forward = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4000", "bind": False}
     MESCheckOut = {"type": zmq.PUSH, "address": "tcp://127.0.0.1:4001", "bind": False}
     MESIncomingProcIn = {"type": zmq.PULL, "address": "tcp://127.0.0.1:4000", "bind": True}

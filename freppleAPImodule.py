@@ -343,7 +343,8 @@ class freppleConnect:
     
     def findAllPurchaseOrdersOrd(self, orderNumber, status):
         sectionHeading = ["plan", "pegging"]
-        data = self.purchaseOrderFunc("GET", {"status": status})
+        data = self.purchaseOrderFunc("GETALL", {"status": status})
+        print(data)
         return self.findMultiListLevel(data, sectionHeading, orderNumber) 
     
     def findAllPurchaseOrders(self, status):

@@ -16,6 +16,8 @@ class messeagePublisher(multiprocessing.Process):
         mqtt_conf = config['mqtt_publish']
         self.supplier = mqtt_conf["supplier"][0]
         self.customer = mqtt_conf["customer"][0]
+        self.supplierNameList = [x["name"] for x in mqtt_conf["supplier"]]
+        self.customerNameList = [x["name"] for x in mqtt_conf["customer"]]
 
         # declarations
         self.zmq_conf = zmq_conf
@@ -32,6 +34,9 @@ class messeagePublisher(multiprocessing.Process):
         print('connecting to '+ config["address"] + ':' + str(config["port"]))
         connect_future = client.connect(config["address"], config["port"], 60)
         #connect_future.result()  # will raise error on failure
+
+    def on_mess(client, userdata, message):
+        print("{'" + str(message.payload) + "', " + str(message.topic) + "}")
 
     def on_connection_interrupted(self, connection, error, **kwargs):
         print("Connection interrupted. error: {}".format(error))
@@ -59,7 +64,16 @@ class messeagePublisher(multiprocessing.Process):
     def on_disconnect(self, client, _userdata, rc):
         if rc != 0:
             print(f"Unexpected MQTT disconnection (rc:{rc}), reconnecting...")
-            self.mqtt_connect(client, self.supplier)
+            if self.supplier["address"] !="":
+                clientSupply = mqtt.Client()
+                self.mqtt_connect(clientSupply, self.supplier)
+                clientSupply.on_publish = self.on_mess()
+        
+            if self.customer["address"] !="":
+                clientCustomer = mqtt.Client()
+                self.mqtt_connect(clientCustomer, self.customer)
+                clientCustomer.on_publish = self.on_mess()
+
 
     def run(self):
         self.do_connect()
@@ -82,11 +96,15 @@ class messeagePublisher(multiprocessing.Process):
                     msg_payload = msg_json['payload']
                     reciever = msg_json["send to"]
                     #logger.debug(f'pub topic:{msg_topic} msg:{msg_payload}')
-                    if reciever == self.supplier["name"] and self.supplier["address"] !="":
-                        print("sending....")
+                    if reciever in self.supplierNameList and self.supplier["address"] !="":
+                        print("sending messeage" + str(msg_payload) + "to supplier at: " + self.supplier["address"])
+                        msg_topic.replace("purchase", "order")
+                        #msg_topic = reciever + "/" + msg_topic
                         clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
-                    elif reciever == self.customer["name"] and self.customer["address"] !="":
-                        print("customer messeage")
+                    elif reciever in self.customerNameList and self.customer["address"] !="":
+                        print("sending messeage" + str(msg_payload) + "to customer at: " + self.customer["address"])
+                        msg_topic.replace("order", "purchase")
+                        #msg_topic = reciever + "/" + msg_topic
                         clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                 except zmq.ZMQError:
                     pass

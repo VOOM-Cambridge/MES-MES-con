@@ -1,5 +1,5 @@
 [Factory]
-name = "3D Printing Factory" #"3D Printing or Robot Lab"
+name = "ABS material supplier" #"3D Printing Factory" or "Robot Assembly Factory"
 frequencyCheck = 5 #seconds
 
 [frepple_info]
@@ -29,7 +29,7 @@ user ="admin"
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "ABS material supplier"
+name = "Raw Material Supplier" #ABS material supplier"
 address = "" #"129.169.232.174"
 port = 1883
 
