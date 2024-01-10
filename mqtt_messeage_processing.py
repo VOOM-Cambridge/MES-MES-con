@@ -112,8 +112,9 @@ class MessageProcessing(multiprocessing.Process):
     def processPurchase(self, reason, supplier, payload):
         if reason == "update":
             # update orders or job first search for order 
-            purchases = self.frepple.findAllPurchaseOrders("confirmed")
-            if payload["name"] in purchases or payload["description"] in purchases:
+            print(payload["reference"])
+            purchases = self.frepple.findAllPurchaseOrders(payload["reference"], "confirmed")
+            if payload["reference"] in purchases or payload["description"] in purchases:
                 # purchse already exists and confiremd and can be updated
                 self.frepple.purchaseOrderFunc("EDIT", payload)
                 print("purchase updated from confirmed")
