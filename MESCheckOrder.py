@@ -91,6 +91,21 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 self.zmq_out.send_json({'send to': reciever, 'topic': topic, 'payload': msg_payload})
             else:
                 print("No comunication channel for cusotmer")
+        # elif len(outNotConfirmend[0]["plan"]["pegging"]) > 1:
+        #     # purchase order assigned to more than one order
+        #     oldPurchase = outNotConfirmend[0]
+
+    def checkOrdersStillConfirmed(self, orderIn):
+        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(orderIn, "proposed")
+
+        if outNotConfirmend:
+            # if there are jobs in proposed then need to change order to reflect 
+            print("MES Check: Change order to quote")
+            dataBack = self.frepple.ordersIn("GET", orderIn)
+            if dataBack:
+                if dataBack["status"] == "open":
+                    dataBack["status"] = "quote"
+                    self.frepple.ordersIn("EDIT", dataBack)
         
     def messageChangeForSupplier(self, orderInfo):
         newMess ={}
@@ -100,7 +115,6 @@ class FreppleCheckerOrders(multiprocessing.Process):
         newMess["quantity"] = orderInfo["quantity"] # quantity needed in purchase order
         newMess["description"] = "" # any other details needed
         newMess["due"] = orderInfo["enddate"]
-        newMess["priority"] = orderInfo["priority"] # default is 1
         newMess["location"] = "Goods Out"
         return newMess
     
@@ -111,8 +125,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
         newMess["item"] = orderInfo["item"] 
         newMess["supplier"] = self.name 
         newMess["quantity"] = orderInfo["quantity"] 
-        newMess["enddate"] = orderInfo["due"]
-        newMess["priority"] = orderInfo["priority"] 
+        newMess["enddate"] = orderInfo["due"] 
         newMess["location"] = "Goods In"
         return newMess
 
@@ -133,9 +146,10 @@ class FreppleCheckerOrders(multiprocessing.Process):
                     print("checking order and sending confirmation")
                     self.checkPurcahseOrders(order)
 
-                # ordNew = self.frepple.findAllOrders("open")
-                # for order in ordNew:
-                #     self.checkOrdersConfirmed(order)
+                ordNew = self.frepple.findAllOrders("open")
+                for order in ordNew:
+                    self.checkOrdersStillConfirmed(order)
+
 
                     
 

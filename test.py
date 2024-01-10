@@ -20,6 +20,10 @@ if __name__ == "__main__":
 
     frepple = freppleConnect("admin", "admin", "http://129.169.48.175:9000")
     output = frepple.findAllPurchaseOrdersOrd("EMS100", "proposed")
-    print(output)
+
+    outNotConfirmend = frepple.findAllPurchaseOrdersOrd("EMS10000", "proposed")
+    print(outNotConfirmend)
+    x = outNotConfirmend[0]["plan"]["pegging"]
+    print(len(x))
 
 
