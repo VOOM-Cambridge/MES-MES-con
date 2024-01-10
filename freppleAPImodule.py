@@ -101,6 +101,7 @@ class freppleConnect:
             return None
         else:
             print('Get data failed:')
+            print(response.status_code)
             return None
         
     # Function to change orders 
@@ -161,10 +162,9 @@ class freppleConnect:
                 "quantity": "",
                 "item": None,
                 "supplier": None,
-                "startdate": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-                "enddate": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                # "startdate": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                # "enddate": datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
                 "location": None,
-                "status": None
                 }
         if process == "ADD" and "item" in data:
             #find supplier details

@@ -18,12 +18,22 @@ def get_config():
 if __name__ == "__main__":
     conf = get_config()
 
-    frepple = freppleConnect("admin", "admin", "http://129.169.48.175:9000")
+    frepple = freppleConnect("admin", "admin", "http://129.169.48.173:9000")
     output = frepple.findAllPurchaseOrdersOrd("EMS100", "proposed")
 
-    outNotConfirmend = frepple.findAllPurchaseOrdersOrd("EMS10000", "proposed")
-    print(outNotConfirmend)
-    x = outNotConfirmend[0]["plan"]["pegging"]
-    print(len(x))
+    mess = {}
+    mess["reference"] = "2"
+    mess["item"] = "ABS material roll"
+    mess["supplier"] = "ABS material supplier"
+    mess["quantity"] = "94.00000000"
+    mess["enddate"] = "2024-01-11T00:56:51"
+    mess["location"] = "Goods In"
+    mess["status"] = "confirmed"
+        
+    # outNotConfirmend = frepple.findAllPurchaseOrdersOrd("EMS10000", "proposed")
+    # print(outNotConfirmend)
+    # x = outNotConfirmend[0]["plan"]["pegging"]
+    out = frepple.purchaseOrderFunc("EDIT", mess)
+    print(out)
 
 

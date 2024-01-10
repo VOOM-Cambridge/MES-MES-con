@@ -113,7 +113,7 @@ class MessageProcessing(multiprocessing.Process):
         if reason == "update":
             # update orders or job first search for order 
             print(payload["reference"])
-            purchases = self.frepple.findAllPurchaseOrders(payload["reference"], "confirmed")
+            purchases = self.frepple.findAllPurchaseOrders( "confirmed")
             if payload["reference"] in purchases or payload["description"] in purchases:
                 # purchse already exists and confiremd and can be updated
                 self.frepple.purchaseOrderFunc("EDIT", payload)
@@ -159,7 +159,8 @@ class MessageProcessing(multiprocessing.Process):
                 elif data[0] not in startOrderData:
                     # new order
                     dateToUpdate.append(data)
-        
+        print("++++++++++ Data to update +++++++++")
+        print(dateToUpdate)
         for data in dateToUpdate:
             # get new data for order send out data
             info = self.frepple.ordersIn("GET", {"name": data[0]})
