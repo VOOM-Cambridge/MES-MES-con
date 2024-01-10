@@ -101,7 +101,8 @@ class FreppleCheckerOrders(multiprocessing.Process):
         if outNotConfirmend:
             # if there are jobs in proposed then need to change order to reflect 
             print("MES Check: Change order to quote")
-            dataBack = self.frepple.ordersIn("GET", orderIn)
+            payload = {"name": orderIn}
+            dataBack = self.frepple.ordersIn("GET", payload)
             if dataBack:
                 if dataBack["status"] == "open":
                     dataBack["status"] = "quote"
