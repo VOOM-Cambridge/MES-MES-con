@@ -87,13 +87,15 @@ class MessageProcessing(multiprocessing.Process):
             self.resendInfo(payload["name"], customer)
         if reason == "new":
             # create a new order in the MES
-            print("MQTT_processing: started new addition")
-            output = self.frepple.ordersIn("ADD", payload)
-            print(output)
-            print("MQTT_processing: new added")
-            self.runUpdates()
-            if output:
-                self.checkNotAlreadyDone(output, customer)
+            outputCheck = self.frepple.ordersIn("GET", payload)
+            if outputCheck or outputCheck == None or outputCheck == []:
+                print("MQTT_processing: started new addition")
+                output = self.frepple.ordersIn("ADD", payload)
+                print(output)
+                print("MQTT_processing: new added")
+                self.runUpdates()
+            else:
+                self.checkNotAlreadyDone(outputCheck, customer)
 
 
     def checkNotAlreadyDone(self, outputOrder, customer):
