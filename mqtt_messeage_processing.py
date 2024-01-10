@@ -64,8 +64,7 @@ class MessageProcessing(multiprocessing.Process):
                         print(partner)
                         self.processOrder(reason, partner, msg_json['payload'])
                     
-                    
-                    
+                
                 except zmq.ZMQError:
                     pass
     
@@ -93,6 +92,20 @@ class MessageProcessing(multiprocessing.Process):
             print(output)
             print("MQTT_processing: new added")
             self.runUpdates()
+            if output:
+                self.checkNotAlreadyDone(output, customer)
+
+
+    def checkNotAlreadyDone(self, outputOrder, customer):
+        # set all order confirmed to complete 
+        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(outputOrder["name"], "proposed")
+        if outNotConfirmend == None or not outNotConfirmend:
+            print("All purchase orders set to confirmed change order to open")
+            msg_payload = self.messageChangeForCustomer(outputOrder)
+            msg_payload["status"] = "confirmed"
+            topic = "MES/purchase/" + self.name + "/update/"
+            self.zmq_out.send_json({'send to': customer, 'topic': topic, 'payload': msg_payload})
+            print("order compleated and confirmed, resending confirmation")
 
     def processPurchase(self, reason, supplier, payload):
         if reason == "update":
@@ -120,7 +133,7 @@ class MessageProcessing(multiprocessing.Process):
         if info and info !=[]:
             payload = self.messageChangeForCustomer(info)
             topic = "MES/purchase/"+ self.name +"/update/"
-            
+
             try:
                 self.zmq_out.send_json({'send to': customer, 'topic': topic, 'payload': payload})
             except zmq.ZMQError:
