@@ -90,7 +90,7 @@ class MessageProcessing(multiprocessing.Process):
             outputCheck = self.frepple.ordersIn("GET", payload)
             print("OOOOOOOOOOOOO    output check  ooooooooooooo")
             print(outputCheck)
-            if outputCheck or outputCheck == None or outputCheck == []:
+            if not outputCheck or outputCheck == None or outputCheck == []:
                 print("MQTT_processing: started new addition")
                 output = self.frepple.ordersIn("ADD", payload)
                 print(output)
