@@ -49,8 +49,7 @@ class MessageProcessing(multiprocessing.Process):
                 try:
                     msg = self.zmq_in.recv(zmq.NOBLOCK)
                     msg_json = json.loads(msg)
-                    print("MQTT_processing: mess passed on")
-                    print(msg_json)
+                    print("MQTT_processing: mess recieved to process")
                     breakUp = msg_json['topic'].replace("MES/", "").split("/")
                     print(breakUp)
                     reason = breakUp[2]
@@ -59,7 +58,7 @@ class MessageProcessing(multiprocessing.Process):
                         print("MQTT_processing: purchase update")
                         self.processPurchase(reason, partner, msg_json['payload'])
                     elif breakUp[0] == "order":
-                        print("MQTT_processing: new order or update to order")
+                        print("MQTT_processing: new or update order")
                         print(reason)
                         print(partner)
                         self.processOrder(reason, partner, msg_json['payload'])
@@ -88,7 +87,7 @@ class MessageProcessing(multiprocessing.Process):
         if reason == "new":
             # create a new order in the MES
             outputCheck = self.frepple.ordersIn("GET", payload)
-            print("OOOOOOOOOOOOO    output check  ooooooooooooo")
+            print("OOOOOOOOOOOOO    check is it exisits  ooooooooooooo")
             print(outputCheck)
             if not outputCheck or outputCheck == None or outputCheck == []:
                 print("MQTT_processing: started new addition")
@@ -98,7 +97,7 @@ class MessageProcessing(multiprocessing.Process):
                 self.runUpdates()
             else:
                 #self.checkNotAlreadyDone(outputCheck, customer)
-                print("order already exists ask for refresh")
+                print("Order already exists ask for refresh")
                 if outputCheck["status"] == "open":
                     msg_payload = self.messageChangeForCustomer(outputCheck)
                     msg_payload["status"] = "confirmed"
@@ -194,11 +193,12 @@ class MessageProcessing(multiprocessing.Process):
         newMess["item"] = orderInfo["item"] # what is being ordered 
         newMess["customer"] = self.name # name of current factory 
         newMess["quantity"] = orderInfo["quantity"] # quantity needed in purchase order
-        newMess["description"] = "" # any other details needed
         newMess["due"] = orderInfo["enddate"]
-        newMess["priority"] = orderInfo["priority"] # default is 1
         newMess["location"] = "Goods Out"
-        return newMess
+        try: 
+            newMess["description"] = orderInfo["plan"]["pegging"] # any other details needed
+        except:
+            pass
     
     def messageChangeForCustomer(self, orderInfo):
         # reverse of above function
@@ -208,7 +208,7 @@ class MessageProcessing(multiprocessing.Process):
         newMess["supplier"] = self.name 
         newMess["quantity"] = orderInfo["quantity"] 
         newMess["enddate"] = orderInfo["due"]
-        newMess["priority"] = orderInfo["priority"] 
+        #newMess["priority"] = orderInfo["priority"] 
         newMess["location"] = "Goods In"
         return newMess
     

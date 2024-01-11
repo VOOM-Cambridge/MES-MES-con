@@ -97,7 +97,6 @@ class FreppleCheckerOrders(multiprocessing.Process):
 
     def checkOrdersStillConfirmed(self, orderIn):
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(orderIn, "proposed")
-
         if outNotConfirmend:
             # if there are jobs in proposed then need to change order to reflect 
             print("MES Check: Change order to quote")
@@ -114,9 +113,12 @@ class FreppleCheckerOrders(multiprocessing.Process):
         newMess["item"] = orderInfo["item"] # what is being ordered 
         newMess["customer"] = self.name # name of current factory 
         newMess["quantity"] = orderInfo["quantity"] # quantity needed in purchase order
-        newMess["description"] = "" # any other details needed
         newMess["due"] = orderInfo["enddate"]
         newMess["location"] = "Goods Out"
+        try: 
+            newMess["description"] = orderInfo["plan"]["pegging"] # any other details needed
+        except:
+            pass
         return newMess
     
     def messageChangeForCustomer(self, orderInfo):
