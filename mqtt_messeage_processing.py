@@ -88,6 +88,8 @@ class MessageProcessing(multiprocessing.Process):
         if reason == "new":
             # create a new order in the MES
             outputCheck = self.frepple.ordersIn("GET", payload)
+            print("OOOOOOOOOOOOO    output check  ooooooooooooo")
+            print(outputCheck)
             if outputCheck or outputCheck == None or outputCheck == []:
                 print("MQTT_processing: started new addition")
                 output = self.frepple.ordersIn("ADD", payload)
@@ -95,12 +97,19 @@ class MessageProcessing(multiprocessing.Process):
                 print("MQTT_processing: new added")
                 self.runUpdates()
             else:
-                self.checkNotAlreadyDone(outputCheck, customer)
+                #self.checkNotAlreadyDone(outputCheck, customer)
+                print("order already exists ask for refresh")
+                if outputCheck["status"] == "open":
+                    msg_payload = self.messageChangeForCustomer(outputCheck)
+                    msg_payload["status"] = "confirmed"
+                    topic = "MES/purchase/" + self.name + "/update/"
+                    self.zmq_out.send_json({'send to': customer, 'topic': topic, 'payload': msg_payload})
+                    print("order compleated and confirmed, resending confirmation")
 
 
     def checkNotAlreadyDone(self, outputOrder, customer):
         # set all order confirmed to complete 
-        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(outputOrder["name"], "proposed")
+        outNotConfirmend = self.frepple.ordersIn(outputOrder["name"])
         if outNotConfirmend == None or not outNotConfirmend:
             print("All purchase orders set to confirmed change order to open")
             msg_payload = self.messageChangeForCustomer(outputOrder)
