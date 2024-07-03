@@ -1,0 +1,40 @@
+[Factory]
+name = "3D Printing Factory" #"3D Printing or Robot Lab"
+frequencyCheck = 5           #seconds
+
+[frepple_info]
+URL = "http://localhost:9000"
+password = "admin"
+user = "admin"
+
+[mqtt_subsciber]
+broker = "localhost" #point to the mqtt broker same ad frepple IP address
+port = 1883
+
+[[mqtt_subsciber.subscription]]
+topic = "MES/#" #the mqtt topic shoestring mqtt broker uses
+
+
+[[json_message_rewriter.entry]]
+topic = "#"
+append = true
+spec_json = '''{"time":"$.timestamp"}'''
+# equivalent
+#[json_message_rewriter.entry.spec]
+#	time="$.timestamp"
+
+
+[mqtt_publish]
+# mqtt_messege settings 
+
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "ABS material supplier"
+address = "129.169.232.174"    #"129.169.232.174"
+port = 1883
+
+[[mqtt_publish.customer]]
+# customer 1 in chain
+name = "Robot Assembly Factory"
+address = "129.169.48.176"
+port = 1883
