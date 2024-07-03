@@ -42,7 +42,6 @@ def create_building_blocks(config):
     bbs["MES_order_check"] = MESCheckOrder.FreppleCheckerOrders(config, {'internal': MESIncomingProcOut, 'out': MESCheckOut})
     bbs["process_incoming"] = mqtt_messeage_processing.MessageProcessing(config, {'in': MESIncomingProcIn, 'out': MESIncomingProcOut})
     bbs["mqtt_publish"] = mqtt_pubished.messeagePublisher(config, publish_mqtt)
-
     return bbs
 
 
