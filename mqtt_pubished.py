@@ -7,7 +7,7 @@ import zmq
 import json
 
 context = zmq.Context()
-logger = logging.getLogger("main.aws_publisher")
+logger = logging.getLogger("MQTT publisher")
 
 class messeagePublisher(multiprocessing.Process):
     def __init__(self, config, zmq_conf):
@@ -31,19 +31,19 @@ class messeagePublisher(multiprocessing.Process):
             self.zmq_in.connect(self.zmq_conf["address"])
 
     def mqtt_connect(self, client, config):
-        print('connecting to '+ config["address"] + ':' + str(config["port"]))
+        logger.info('connecting to '+ config["address"] + ':' + str(config["port"]))
         connect_future = client.connect(config["address"], config["port"], 60)
         #connect_future.result()  # will raise error on failure
 
     def on_mess(client, userdata, message):
-        print("{'" + str(message.payload) + "', " + str(message.topic) + "}")
+        logger.info("{'" + str(message.payload) + "', " + str(message.topic) + "}")
 
     def on_connection_interrupted(self, connection, error, **kwargs):
-        print("Connection interrupted. error: {}".format(error))
+        logger.info("Connection interrupted. error: {}".format(error))
 
     # Callback when an interrupted connection is re-established.
     def on_connection_resumed(self, connection, return_code, session_present, **kwargs):
-        print("Connection resumed. return_code: {} session_present: {}".format(return_code, session_present))
+        logger.info("Connection resumed. return_code: {} session_present: {}".format(return_code, session_present))
 
         if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
             logger.warning("Session did not persist. Resubscribing to existing topics...")
@@ -55,15 +55,15 @@ class messeagePublisher(multiprocessing.Process):
 
     def on_resubscribe_complete(self, resubscribe_future):
         resubscribe_results = resubscribe_future.result()
-        print("Resubscribe results: {}".format(resubscribe_results))
+        logger.info("Resubscribe results: {}".format(resubscribe_results))
 
         for topic, qos in resubscribe_results['topics']:
             if qos is None:
-                print("Server rejected resubscribe to topic: {}".format(topic))
+                logger.info("Server rejected resubscribe to topic: {}".format(topic))
 
     def on_disconnect(self, client, _userdata, rc):
         if rc != 0:
-            print(f"Unexpected MQTT disconnection (rc:{rc}), reconnecting...")
+            logger.info(f"Unexpected MQTT disconnection (rc:{rc}), reconnecting...")
             if self.supplier["address"] !="":
                 clientSupply = mqtt.Client()
                 self.mqtt_connect(clientSupply, self.supplier)
@@ -97,12 +97,12 @@ class messeagePublisher(multiprocessing.Process):
                     reciever = msg_json["send to"]
                     #logger.debug(f'pub topic:{msg_topic} msg:{msg_payload}')
                     if reciever in self.supplierNameList and self.supplier["address"] !="":
-                        print("sending messeage" + str(msg_payload) + "to supplier at: " + self.supplier["address"])
+                        logger.info("sending messeage" + str(msg_payload) + "to supplier at: " + self.supplier["address"])
                         msg_topic.replace("purchase", "order")
                         #msg_topic = reciever + "/" + msg_topic
                         clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                     elif reciever in self.customerNameList and self.customer["address"] !="":
-                        print("sending messeage" + str(msg_payload) + "to customer at: " + self.customer["address"])
+                        logger.info("sending messeage" + str(msg_payload) + "to customer at: " + self.customer["address"])
                         msg_topic.replace("order", "purchase")
                         #msg_topic = reciever + "/" + msg_topic
                         clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)

@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 
 context = zmq.Context()
+logger = logging.getLogger("Check Orders")
 
 class FreppleCheckerOrders(multiprocessing.Process):
     def __init__(self, config, zmq_conf):
@@ -47,17 +48,17 @@ class FreppleCheckerOrders(multiprocessing.Process):
         # find all purchase orders for new order, send purchase orders and confirm
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
         for outOrd in outNotConfirmend:
-            print("new order found to process purchases for")
+            logger.info("new order found to process purchases for")
             # send for new order, send messeage with purchase order
             # check if purchase orders have been confirmed if not send a messeage 
             if outOrd["supplier"] in self.supplierNameList: 
                 #supplier is one connected to who can be comunciated with
                 reciever = outOrd["supplier"]
-                print("reciever: "  + reciever)
+                logger.info("reciever: "  + reciever)
                 if "Raw Material" not in reciever or self.supplier["address"] != "":
                     # send on the order back up the supply chain or send a reminder
                     msg_payload = self.messageChangeForSupplier(outOrd)
-                    print("suppliers")
+                    logger.info("suppliers")
                     self.zmq_out.send_json({'send to': reciever, 'topic': self.topic, 'payload': msg_payload})
                 else:
                     # confirm order is ok set confirmation in purchase automatically (supplier wont do it)
@@ -75,7 +76,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
         # set all order confirmed to complete 
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
         if outNotConfirmend == None or not outNotConfirmend:
-            print("All purchase orders set to confirmed change order to open")
+            logger.info("All purchase orders set to confirmed change order to open")
             orderInfo ={}
             orderInfo["name"] = order
             dataBack = self.frepple.ordersIn("GET", orderInfo)
@@ -84,13 +85,13 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 dataBack["status"] = "open"
                 self.frepple.ordersIn("EDIT", dataBack)
                 # send update to customer
-                print("************  order " + order + " update to open ****************")
+                logger.info("************  order " + order + " update to open ****************")
                 msg_payload = self.messageChangeForCustomer(dataBack)
                 msg_payload["status"] = "confirmed"
                 topic = "MES/purchase/" + self.name + "/update/"
                 self.zmq_out.send_json({'send to': reciever, 'topic': topic, 'payload': msg_payload})
             else:
-                print("No comunication channel for cusotmer")
+                logger.info("No comunication channel for cusotmer")
         # elif len(outNotConfirmend[0]["plan"]["pegging"]) > 1:
         #     # purchase order assigned to more than one order
         #     oldPurchase = outNotConfirmend[0]
@@ -99,7 +100,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(orderIn, "proposed")
         if outNotConfirmend:
             # if there are jobs in proposed then need to change order to reflect 
-            print("MES Check: Change order to quote")
+            logger.info("MES Check: Change order to quote")
             payload = {"name": orderIn}
             dataBack = self.frepple.ordersIn("GET", payload)
             if dataBack:
@@ -116,7 +117,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
         newMess["due"] = orderInfo["enddate"]
         newMess["location"] = "Goods Out"
         try: 
-            newMess["description"] = orderInfo["plan"]["pegging"] # any other details needed
+            newMess["description"] = str(orderInfo["plan"]["pegging"]) # any other details needed
         except:
             pass
         return newMess
@@ -136,7 +137,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
     def run(self):
         self.do_connect()
         self.frepple = freppleConnect(self.user, self.password, self.url)
-        print("Connected")
+        logger.info("Connected")
         run = True
         timeReading = datetime.now()
         while run:
@@ -146,7 +147,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 timeReading = datetime.now()
                 for order in ordNewQuote:
                     # place the new orders with other MES software
-                    print("checking order and sending confirmation")
+                    logger.info("checking order and sending confirmation")
                     self.checkPurcahseOrders(order)
 
                 ordNew = self.frepple.findAllOrders("open")

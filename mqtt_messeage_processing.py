@@ -45,27 +45,24 @@ class MessageProcessing(multiprocessing.Process):
         self.frepple = freppleAPImodule.freppleConnect(self.user, self.password, self.url)
         run = True
         while run:
-            while self.zmq_in.poll(50, zmq.POLLIN):
-                try:
-                    msg = self.zmq_in.recv(zmq.NOBLOCK)
-                    msg_json = json.loads(msg)
-                    print("MQTT_processing: mess recieved to process")
-                    breakUp = msg_json['topic'].replace("MES/", "").split("/")
-                    print(breakUp)
-                    reason = breakUp[2]
-                    partner = breakUp[1]
-                    if breakUp[0] == "purchase":
-                        print("MQTT_processing: purchase update")
-                        self.processPurchase(reason, partner, msg_json['payload'])
-                    elif breakUp[0] == "order":
-                        print("MQTT_processing: new or update order")
-                        print(reason)
-                        print(partner)
-                        self.processOrder(reason, partner, msg_json['payload'])
+            while self.zmq_in.poll(500, zmq.POLLIN):
+                msg = self.zmq_in.recv()
+                msg_json = json.loads(msg)
+                print("MQTT_processing: mess recieved to process")
+                breakUp = msg_json['topic'].replace("MES/", "").split("/")
+                print(breakUp)
+                reason = breakUp[2]
+                partner = breakUp[1]
+                if breakUp[0] == "purchase":
+                    print("MQTT_processing: purchase update")
+                    self.processPurchase(reason, partner, msg_json['payload'])
+                elif breakUp[0] == "order":
+                    print("MQTT_processing: new or update order")
+                    print(reason)
+                    print(partner)
+                    self.processOrder(reason, partner, msg_json['payload'])
                     
                 
-                except zmq.ZMQError:
-                    pass
     
     def processOrder(self, reason, customer, payload):
         if reason == "update":
@@ -196,7 +193,7 @@ class MessageProcessing(multiprocessing.Process):
         newMess["due"] = orderInfo["enddate"]
         newMess["location"] = "Goods Out"
         try: 
-            newMess["description"] = orderInfo["plan"]["pegging"] # any other details needed
+            newMess["description"] = str(orderInfo["plan"]["pegging"]) # any other details needed
         except:
             pass
     

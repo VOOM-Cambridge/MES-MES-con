@@ -5,7 +5,7 @@ import json
 
 import zmq
 
-logger = logging.getLogger("main.mqtt_subscriber")
+logger = logging.getLogger("MQTT Subscriber")
 context = zmq.Context()
 
 
@@ -40,6 +40,7 @@ class MQTTSubscriber(multiprocessing.Process):
         client.on_disconnect = self.on_disconnect
 
         client.connect(self.url, self.port, 60)
+        logger.info(f"Connecting to {self.url}:{self.port}")
         client.loop_forever()
 
     def on_connect(self, client, _userdata, _flags, rc):
@@ -47,7 +48,7 @@ class MQTTSubscriber(multiprocessing.Process):
         # do subscribe
         for entry in self.subscriptions:
             if 'topic' in entry:
-                qos = entry.get('qos', 0)
+                qos = 1
                 topic = entry['topic']
                 logger.info(f"Subscribing to {topic} at QOS {qos}")
                 client.subscribe(topic, qos)
@@ -55,10 +56,10 @@ class MQTTSubscriber(multiprocessing.Process):
     def on_message(self, _client, _userdata, msg):
         output = {'topic': msg.topic, 'payload': json.loads(msg.payload)}
         logger.info(f"Forwarding {output}")
-        print("messeage recieved")
-        print(output)
+        logger.info("messeage recieved")
+        logger.info(output)
         self.zmq_out.send_json(output)
 
     def on_disconnect(self, _client, _userdata, rc):
         if rc != 0:
-            print("Unexpected disconnection.")
+            logger.info("Unexpected disconnection.")

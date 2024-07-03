@@ -18,7 +18,6 @@ import mqtt_subscriber
 logger = logging.getLogger("main")
 logging.basicConfig(level=logging.DEBUG)  # move to log config file using python functionality
 
-
 def get_config():
     with open("./config/config.toml", "rb") as f:
         toml_conf = tomli.load(f)
