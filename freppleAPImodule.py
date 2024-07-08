@@ -3,6 +3,11 @@ from base64 import b64encode
 import json
 from datetime import datetime
 
+import logging
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
 class freppleConnect:
     def __init__(self, user, passw, URL):
         self.BASE_URL = URL #"http://localhost:9000"
@@ -75,6 +80,7 @@ class freppleConnect:
             case "REMOVE":
                 pros = "DELETE"
                 url = url + str(data[first_key]).replace(" ", "%20") + "/"
+                print(url)
             case "EDIT":
                 pros = "POST"
             case default:
@@ -349,7 +355,12 @@ class freppleConnect:
     
     def findAllPurchaseOrders(self, status):
         data = self.purchaseOrderFunc("GETALL", {"status": status})
-        return self.findMultiList(data, "reference")
+        #return self.findMultiList(data, ["reference"])
+        return data
+    
+    def findAllPurchaseOrdersNameOnly(self, status):
+        data = self.purchaseOrderFunc("GETALL", {"status": status})
+        return self.findMultiList(data, ["reference",'plan'])
 
     def findAllCustomers(self):
         data = self.customerFunc("GET", {})
@@ -392,6 +403,35 @@ class freppleConnect:
             return info
         else:
             return None
+        
+    def removeExtraPurchaseOrders(self):
+        # find all orders
+        orders =[]
+        orders = orders + self.findAllOrders("open")
+        orders = orders + self.findAllOrders("quote")
+        print(orders)
+            
+        output = self.findAllPurchaseOrdersNameOnly("proposed")
+        liss = []
+        lissnot =[]
+        for out in output:
+            added = False
+            dictVal = out[1]
+            if type(dictVal) == str:
+                dictV = json.loads(dictVal)
+            else:
+                dictV = dictVal
+            for ord in orders:
+                if ord in dictV["pegging"]:
+                    liss.append(out[0])
+                    added = True
+            if not added:
+                lissnot.append(out[0])
+
+        for liss in lissnot:
+            self.purchaseOrderFunc("REMOVE", {"reference": liss})
+
+        
         
 
 

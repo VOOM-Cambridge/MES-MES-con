@@ -25,7 +25,6 @@ class FreppleCheckerOrders(multiprocessing.Process):
         self.customer = config["mqtt_publish"]["customer"]
         self.customerNameList = [x["name"] for x in self.customer]
 
-
         # declarations
         self.zmq_conf = zmq_conf
         self.zmq_out = None
@@ -54,14 +53,15 @@ class FreppleCheckerOrders(multiprocessing.Process):
             if outOrd["supplier"] in self.supplierNameList: 
                 #supplier is one connected to who can be comunciated with
                 reciever = outOrd["supplier"]
-                logger.info("reciever: "  + reciever)
-                if "Raw Material" not in reciever or self.supplier["address"] != "":
+                logger.info("reciever: "  + reciever + " " + self.supplier[0]["address"])
+                if "Raw Material" not in reciever and self.supplier[0]["address"] != "":
                     # send on the order back up the supply chain or send a reminder
                     msg_payload = self.messageChangeForSupplier(outOrd)
                     logger.info("suppliers")
                     self.zmq_out.send_json({'send to': reciever, 'topic': self.topic, 'payload': msg_payload})
                 else:
                     # confirm order is ok set confirmation in purchase automatically (supplier wont do it)
+                    logger.info("confirmed becuase not there")
                     outOrd["status"] = "confirmed"
                     self.frepple.purchaseOrderFunc("EDIT", outOrd)
             else:
@@ -76,6 +76,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
         # set all order confirmed to complete 
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
         if outNotConfirmend == None or not outNotConfirmend:
+            
             logger.info("All purchase orders set to confirmed change order to open")
             orderInfo ={}
             orderInfo["name"] = order
@@ -144,15 +145,19 @@ class FreppleCheckerOrders(multiprocessing.Process):
             if (datetime.now() -timeReading).total_seconds()>self.frequency:
                 # find all Inquiry orders not confirmed and check
                 ordNewQuote = self.frepple.findAllOrders("quote")
-                timeReading = datetime.now()
+                
                 for order in ordNewQuote:
                     # place the new orders with other MES software
-                    logger.info("checking order and sending confirmation")
+                    logger.info("checking order " + order + " and sending confirmation")
                     self.checkPurcahseOrders(order)
 
                 ordNew = self.frepple.findAllOrders("open")
                 for order in ordNew:
                     self.checkOrdersStillConfirmed(order)
+                    
+                timeReading = datetime.now()
+                logger.info("Run plan .............")
+                self.frepple.runPlan()
 
 
                     
