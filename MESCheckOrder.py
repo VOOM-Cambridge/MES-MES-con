@@ -71,6 +71,39 @@ class FreppleCheckerOrders(multiprocessing.Process):
                     msg_payload = self.messageChangeForSupplier(outOrd)
                     logger.info("suppliers")
                     self.zmq_out.send_json({'send to': reciever, 'topic': self.topic, 'payload': msg_payload})
+                    # set purchase order to approved to stop it changing in MES and repeate being sent
+                    outOrd["status"] = "approved"
+                    self.frepple.purchaseOrderFunc("EDIT", outOrd)
+                else:
+                    # confirm order is ok set confirmation in purchase automatically (supplier wont do it)
+                    logger.info("confirmed becuase not there")
+                    outOrd["status"] = "confirmed"
+                    self.frepple.purchaseOrderFunc("EDIT", outOrd)
+            else:
+                # supplier not in list of comunciaiton ones so set to confirmed
+                outOrd["status"] = "confirmed"
+                self.frepple.purchaseOrderFunc("EDIT", outOrd)
+
+        # find all purchase orders for new order no fully confirmed 
+        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "approved")
+        for outOrd in outNotConfirmend:
+            logger.info("new order found to process purchases for")
+            # send for new order, send messeage with purchase order
+            # check if purchase orders have been confirmed if not send a messeage 
+            if outOrd["supplier"] in self.supplierNameList: 
+                #supplier is one connected to who can be comunciated with
+                reciever = outOrd["supplier"]
+                try:
+                    addressToSend = self.addressSupplier[reciever]
+                except:
+                    addressToSend = ""
+
+                logger.info("reciever: "  + reciever + " " + addressToSend)
+                if "Raw Material" not in reciever and addressToSend != "":
+                    # send on the order back up the supply chain or send a reminder
+                    msg_payload = self.messageChangeForSupplier(outOrd)
+                    logger.info("suppliers")
+                    self.zmq_out.send_json({'send to': reciever, 'topic': self.topic, 'payload': msg_payload})
                 else:
                     # confirm order is ok set confirmation in purchase automatically (supplier wont do it)
                     logger.info("confirmed becuase not there")
@@ -86,7 +119,9 @@ class FreppleCheckerOrders(multiprocessing.Process):
 
     def checkOrdersConfirmed(self, order):
         # set all order confirmed to complete 
-        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
+        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "approved")
+        outNotApproved = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
+        outNotConfirmend = outNotConfirmend + outNotApproved
         if outNotConfirmend == None or not outNotConfirmend:
             
             logger.info("All purchase orders set to confirmed change order to open")
@@ -118,7 +153,10 @@ class FreppleCheckerOrders(multiprocessing.Process):
         #     oldPurchase = outNotConfirmend[0]
 
     def checkOrdersStillConfirmed(self, orderIn):
-        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(orderIn, "proposed")
+        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(orderIn, "approved")
+        outNotApproved = self.frepple.findAllPurchaseOrdersOrd(orderIn, "proposed")
+        outNotConfirmend = outNotConfirmend + outNotApproved
+
         if outNotConfirmend:
             # if there are jobs in proposed then need to change order to reflect 
             logger.info("MES Check: Change order to quote")

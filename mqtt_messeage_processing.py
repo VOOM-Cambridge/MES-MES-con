@@ -93,6 +93,7 @@ class MessageProcessing(multiprocessing.Process):
                 output = self.frepple.ordersIn("ADD", payload)
                 logger.info(output)
                 logger.info("MQTT_processing: new added")
+                time.sleep(10)
                 self.runUpdates()
             else:
                 #self.checkNotAlreadyDone(outputCheck, customer)
@@ -142,7 +143,7 @@ class MessageProcessing(multiprocessing.Process):
                 logger.info("purchase updated from confirmed")
                 self.runUpdates()
 
-            purchases = self.frepple.findAllPurchaseOrders("proposed")
+            purchases = self.frepple.findAllPurchaseOrders("proposed")  + self.frepple.findAllPurchaseOrders("approved")
             nam = self.checkName(payload)
             if nam in purchases or descrip in purchases:
                 # purchase already exists and not confirmed yet and can be upadtes
@@ -221,8 +222,8 @@ class MessageProcessing(multiprocessing.Process):
         newMess["reference"] =  orderInfo["name"]  
         newMess["item"] = orderInfo["item"] 
         newMess["supplier"] = self.name 
-        newMess["quantity"] = orderInfo["quantity"] 
-        newMess["enddate"] = orderInfo["due"]
+        newMess["quantity"] = orderInfo["plannedquantity"] 
+        newMess["enddate"] = orderInfo["deliverydate"]
         #newMess["priority"] = orderInfo["priority"] 
         newMess["location"] = "Goods In"
         return newMess

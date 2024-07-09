@@ -1,6 +1,6 @@
 [Factory]
 name = "3D Printing Factory" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 30          #seconds
+frequencyCheck = 20          #seconds
 
 [frepple_info]
 URL = "http://localhost:9000"
