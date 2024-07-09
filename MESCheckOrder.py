@@ -27,9 +27,9 @@ class FreppleCheckerOrders(multiprocessing.Process):
         self.addressSupplier ={}
         self.addressCustomer = {}
         for supplier in self.supplierNameList:
-            self.addressSupplier[supplier["name"]] = supplier["address"]
+            self.addressSupplier[supplier] = supplier["address"]
         for customer in self.customerNameList:
-            self.addressCustomer[customer["name"]] = customer["address"]
+            self.addressCustomer[customer] = customer["address"]
 
 
         # declarations
