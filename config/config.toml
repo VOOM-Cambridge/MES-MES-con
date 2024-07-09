@@ -33,6 +33,12 @@ name = "ABS material supplier" #ABS material supplier"
 address = ""                   #"129.169.48.175" "129.169.232.174"
 port = 1883
 
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Casing Supplier" #ABS material supplier"
+address = ""             #"129.169.48.175" "129.169.232.174"
+port = 1883
+
 [[mqtt_publish.customer]]
 # customer 1 in chain
 name = "Robot Assembly Factory"

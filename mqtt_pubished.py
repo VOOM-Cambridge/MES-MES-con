@@ -14,8 +14,8 @@ class messeagePublisher(multiprocessing.Process):
         super().__init__()
 
         mqtt_conf = config['mqtt_publish']
-        self.supplier = mqtt_conf["supplier"]
-        self.customer = mqtt_conf["customer"]
+        self.supplier = mqtt_conf["supplier"][0]
+        self.customer = mqtt_conf["customer"][0]
         self.supplierNameList = [x["name"] for x in mqtt_conf["supplier"]]
         self.customerNameList = [x["name"] for x in mqtt_conf["customer"]]
 
