@@ -82,12 +82,13 @@ class FreppleCheckerOrders(multiprocessing.Process):
             orderInfo["name"] = order
             dataBack = self.frepple.ordersIn("GET", orderInfo)
             reciever = dataBack["customer"]
-            if reciever in self.customerNameList:
-                dataBack["status"] = "open"
-                self.frepple.ordersIn("EDIT", dataBack)
-                # send update to customer
-                logger.info("************  order " + order + " update to open ****************")
-                msg_payload = self.messageChangeForCustomer(dataBack)
+            dataBack["status"] = "open"
+            self.frepple.ordersIn("EDIT", dataBack)
+            # send update to customer
+            logger.info("************  order " + order + " update to open ****************")
+            msg_payload = self.messageChangeForCustomer(dataBack)
+            
+            if reciever in self.customerNameList:    
                 msg_payload["status"] = "confirmed"
                 topic = "MES/purchase/" + self.name + "/update/"
                 self.zmq_out.send_json({'send to': reciever, 'topic': topic, 'payload': msg_payload})

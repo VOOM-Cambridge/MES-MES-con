@@ -54,11 +54,14 @@ class MQTTSubscriber(multiprocessing.Process):
                 client.subscribe(topic, qos)
 
     def on_message(self, _client, _userdata, msg):
-        output = {'topic': msg.topic, 'payload': json.loads(msg.payload)}
-        logger.info(f"Forwarding {output}")
-        logger.info("messeage recieved")
-        logger.info(output)
-        self.zmq_out.send_json(output)
+        try:
+            output = {'topic': msg.topic, 'payload': json.loads(msg.payload)}
+            logger.info(f"Forwarding {output}")
+            logger.info("messeage recieved")
+            logger.info(output)
+            self.zmq_out.send_json(output)
+        except:
+            logger.info("error processing messeage: ")
 
     def on_disconnect(self, _client, _userdata, rc):
         if rc != 0:

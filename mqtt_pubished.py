@@ -5,7 +5,7 @@ import multiprocessing
 import logging
 import zmq
 import json
-
+from datetime import datetime
 context = zmq.Context()
 logger = logging.getLogger("MQTT publisher")
 
@@ -14,8 +14,8 @@ class messeagePublisher(multiprocessing.Process):
         super().__init__()
 
         mqtt_conf = config['mqtt_publish']
-        self.supplier = mqtt_conf["supplier"][0]
-        self.customer = mqtt_conf["customer"][0]
+        self.supplier = mqtt_conf["supplier"]
+        self.customer = mqtt_conf["customer"]
         self.supplierNameList = [x["name"] for x in mqtt_conf["supplier"]]
         self.customerNameList = [x["name"] for x in mqtt_conf["customer"]]
 
@@ -74,40 +74,59 @@ class messeagePublisher(multiprocessing.Process):
                 self.mqtt_connect(clientCustomer, self.customer)
                 clientCustomer.on_publish = self.on_mess()
 
+    def mqtt_connect_call(self):
+        if self.supplier["address"] !="":
+            self.clientSupply = mqtt.Client()
+            #self.mqtt_connect(self.clientSupply, self.supplier)
+            try:
+                self.mqtt_connect(self.clientSupply, self.supplier)
+            except:
+                print("Error connecteing Supplier")
+        
+        if self.customer["address"] !="":
+            self.clientCustomer = mqtt.Client()
+            #self.mqtt_connect(self.clientCustomer, self.customer)
+            try:
+                self.mqtt_connect(self.clientCustomer, self.customer)
+            except:
+                print("Error connecting Cusotmer")
 
     def run(self):
         self.do_connect()
-
-        if self.supplier["address"] !="":
-            clientSupply = mqtt.Client()
-            self.mqtt_connect(clientSupply, self.supplier)
+        self.mqtt_connect_call()
         
-        if self.customer["address"] !="":
-            clientCustomer = mqtt.Client()
-            self.mqtt_connect(clientCustomer, self.customer)
-
+        timeLast = datetime.now()
         run = True
         while run:
             while self.zmq_in.poll(50, zmq.POLLIN):
+
                 try:
                     msg = self.zmq_in.recv(zmq.NOBLOCK)
                     msg_json = json.loads(msg)
                     msg_topic = msg_json['topic']
                     msg_payload = msg_json['payload']
                     reciever = msg_json["send to"]
-                    #logger.debug(f'pub topic:{msg_topic} msg:{msg_payload}')
+                    self.mqtt_connect_call()
+                    logger.debug(f'pub topic:{msg_topic} msg:{msg_payload}')
                     if reciever in self.supplierNameList and self.supplier["address"] !="":
                         logger.info("sending messeage" + str(msg_payload) + "to supplier at: " + self.supplier["address"])
                         msg_topic.replace("purchase", "order")
                         #msg_topic = reciever + "/" + msg_topic
-                        clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
+                        self.clientSupply.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                     elif reciever in self.customerNameList and self.customer["address"] !="":
                         logger.info("sending messeage" + str(msg_payload) + "to customer at: " + self.customer["address"])
                         msg_topic.replace("order", "purchase")
                         #msg_topic = reciever + "/" + msg_topic
-                        clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
+                        self.clientCustomer.publish(topic=msg_topic, payload=json.dumps(msg_payload),qos=1)
                 except zmq.ZMQError:
                     pass
+
+                if (datetime.now() -timeLast).total_seconds()>60:
+                    self.mqtt_connect_call()
+                    timeLast = datetime.now()
+
+
+                    
 
                 
             # client.loop(0.05)

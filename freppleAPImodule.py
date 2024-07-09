@@ -38,7 +38,8 @@ class freppleConnect:
                     return self.findDataFromResults(dataToReturn, first_key, data, keyList, ind+1)                    
                 else:
                     return None
-
+            else:
+                return None
     def findDataFromResultsMulti(self, returnData, first_key, data):
         dataToReturn = []
         if data[first_key] != "":
@@ -87,6 +88,7 @@ class freppleConnect:
                 pros = "GET"
                 payload = None
         response = requests.request(pros, url, headers=self.headers, data=payload)
+
         if response.status_code == 200:
             responseData = response.json()
             if process == "GETALL":
@@ -96,7 +98,7 @@ class freppleConnect:
                 searchData = self.findDataFromResults(responseData, first_key, data, keyList, 0)       
 
             if searchData ==None:
-                return responseData
+                return []
             else:
                 return searchData
         elif response.status_code == 201:
@@ -355,8 +357,8 @@ class freppleConnect:
     
     def findAllPurchaseOrders(self, status):
         data = self.purchaseOrderFunc("GETALL", {"status": status})
-        #return self.findMultiList(data, ["reference"])
-        return data
+        return self.findList(data, "reference")
+        #return data
     
     def findAllPurchaseOrdersNameOnly(self, status):
         data = self.purchaseOrderFunc("GETALL", {"status": status})

@@ -51,6 +51,7 @@ class MessageProcessing(multiprocessing.Process):
                 logger.info("MQTT_processing: mess recieved to process")
                 breakUp = msg_json['topic'].replace("MES/", "").split("/")
                 logger.info(breakUp)
+                logger.info(msg_json['payload'])
                 reason = breakUp[2]
                 partner = breakUp[1]
                 if breakUp[0] == "purchase":
@@ -116,25 +117,34 @@ class MessageProcessing(multiprocessing.Process):
             logger.info("order compleated and confirmed, resending confirmation")
 
     def checkDescrip(self, payload):
-        if payload["description"]:
+        try:
             return payload["description"]
-        else:
+        except:
             return "unkown description text"
+    
+    def checkName(self, payload):
+        try:
+            return payload["name"]
+        except:
+            return payload["reference"]
 
     def processPurchase(self, reason, supplier, payload):
         if reason == "update":
             # update orders or job first search for order 
             logger.info(payload["reference"])
-            purchases = self.frepple.findAllPurchaseOrders( "confirmed")
+            purchases = self.frepple.findAllPurchaseOrders("confirmed")
             descrip = self.checkDescrip(payload)
-            if payload["reference"] in purchases or descrip in purchases:
+            nam = self.checkName(payload)
+
+            if nam in purchases or descrip in purchases:
                 # purchse already exists and confiremd and can be updated
                 self.frepple.purchaseOrderFunc("EDIT", payload)
                 logger.info("purchase updated from confirmed")
                 self.runUpdates()
 
             purchases = self.frepple.findAllPurchaseOrders("proposed")
-            if payload["name"] in purchases or descrip in purchases:
+            nam = self.checkName(payload)
+            if nam in purchases or descrip in purchases:
                 # purchase already exists and not confirmed yet and can be upadtes
                 self.frepple.purchaseOrderFunc("EDIT", payload)
                 logger.info("MQTT_processing: purchase updated from proposed")
