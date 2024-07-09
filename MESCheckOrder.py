@@ -198,11 +198,9 @@ class FreppleCheckerOrders(multiprocessing.Process):
         # collect all order information before on delivery data and status
         startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         self.frepple.runPlan()
-        logging.info(startOrderData)
         logger.info("MQTT_processing: plan run and check for updates")
         time.sleep(4)
         endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
-        logging.info(endOrderData)
         dateToUpdate =[]
         for data in endOrderData:
             if data not in startOrderData:

@@ -103,6 +103,6 @@ class MessagePublisherMulti(multiprocessing.Process):
                 except zmq.ZMQError:
                     pass
 
-                if (datetime.now() - timeLast).total_seconds() > 500:
+                if (datetime.now() - timeLast).total_seconds() > 100:
                     self.mqtt_connect_call()
                     timeLast = datetime.now()
