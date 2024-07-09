@@ -24,6 +24,13 @@ class FreppleCheckerOrders(multiprocessing.Process):
         self.supplierNameList = [x["name"] for x in self.supplier]
         self.customer = config["mqtt_publish"]["customer"]
         self.customerNameList = [x["name"] for x in self.customer]
+        self.addressSupplier ={}
+        self.addressCustomer = {}
+        for supplier in self.supplierNameList:
+            self.addressSupplier[supplier["name"]] = supplier["address"]
+        for customer in self.customerNameList:
+            self.addressCustomer[customer["name"]] = customer["address"]
+
 
         # declarations
         self.zmq_conf = zmq_conf
@@ -53,8 +60,13 @@ class FreppleCheckerOrders(multiprocessing.Process):
             if outOrd["supplier"] in self.supplierNameList: 
                 #supplier is one connected to who can be comunciated with
                 reciever = outOrd["supplier"]
-                logger.info("reciever: "  + reciever + " " + self.supplier[0]["address"])
-                if "Raw Material" not in reciever and self.supplier[0]["address"] != "":
+                try:
+                    addressToSend = self.addressSupplier[reciever]
+                except:
+                    addressToSend = ""
+
+                logger.info("reciever: "  + reciever + " " + addressToSend)
+                if "Raw Material" not in reciever and addressToSend != "":
                     # send on the order back up the supply chain or send a reminder
                     msg_payload = self.messageChangeForSupplier(outOrd)
                     logger.info("suppliers")
@@ -89,11 +101,18 @@ class FreppleCheckerOrders(multiprocessing.Process):
             msg_payload = self.messageChangeForCustomer(dataBack)
             
             if reciever in self.customerNameList:    
-                msg_payload["status"] = "confirmed"
-                topic = "MES/purchase/" + self.name + "/update/"
-                self.zmq_out.send_json({'send to': reciever, 'topic': topic, 'payload': msg_payload})
+                try:
+                    cusAddressToSend = self.addressCustomer[reciever]
+                except:
+                    cusAddressToSend = ""
+                if cusAddressToSend != "":
+                    msg_payload["status"] = "confirmed"
+                    topic = "MES/purchase/" + self.name + "/update/"
+                    self.zmq_out.send_json({'send to': reciever, 'topic': topic, 'payload': msg_payload})
+                else:
+                    logger.info("No comunication channel for cusotmer")
             else:
-                logger.info("No comunication channel for cusotmer")
+                logger.info("No customer to send to")
         # elif len(outNotConfirmend[0]["plan"]["pegging"]) > 1:
         #     # purchase order assigned to more than one order
         #     oldPurchase = outNotConfirmend[0]
