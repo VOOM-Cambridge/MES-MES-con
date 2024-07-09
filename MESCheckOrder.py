@@ -5,6 +5,7 @@ import logging
 import zmq
 import json
 from datetime import datetime
+import time
 
 context = zmq.Context()
 logger = logging.getLogger("Check Orders")
@@ -187,10 +188,49 @@ class FreppleCheckerOrders(multiprocessing.Process):
         newMess["reference"] =  orderInfo["name"]  
         newMess["item"] = orderInfo["item"] 
         newMess["supplier"] = self.name 
-        newMess["quantity"] = orderInfo["quantity"] 
-        newMess["enddate"] = orderInfo["due"] 
+        newMess["quantity"] = orderInfo["plannedquantity"] 
+        newMess["enddate"] = orderInfo["deliverydate"]
+        #newMess["priority"] = orderInfo["priority"] 
         newMess["location"] = "Goods In"
         return newMess
+    
+    def runUpdates(self):
+        # collect all order information before on delivery data and status
+        startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
+        self.frepple.runPlan()
+        logging.info(startOrderData)
+        logger.info("MQTT_processing: plan run and check for updates")
+        time.sleep(4)
+        endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
+        logging.info(endOrderData)
+        dateToUpdate =[]
+        for data in endOrderData:
+            if data not in startOrderData:
+                if data[0] in startOrderData:
+                    # end date of order has changed but the order is still there
+                    dateToUpdate.append(data)
+                elif data[0] not in startOrderData:
+                    # new order
+                    dateToUpdate.append(data)
+        logger.info("++++++++++ Data to update +++++++++")
+        logger.info(dateToUpdate)
+        for data in dateToUpdate:
+            # get new data for order send out data
+            info = self.frepple.ordersIn("GET", {"name": data[0]})
+            if info != []:
+            # send on messeage to cusotmer of that order - only customer needs updating others detemined by supplier
+                payload = self.messageChangeForCustomer(info)
+                topic = "MES/purchase/"+ self.name +"/update/"
+                keys_list = ["item", "quantity"]
+                # payload = {key: info[key] for key in keys_list}
+                # payload["reference"] = info["name"]
+                # payload["status"] = "confirmed"  # assume it is confirmed if returning a messeage or edit
+                # payload["enddate"] = info["deliverydate"]
+                try:
+                    self.zmq_out.send_json({'send to': info["customer"], 'topic': topic, 'payload': payload})
+                except zmq.ZMQError:
+                    logger.info("MQTT_processing: Error sending messeage on")
+                    pass
 
         
     def run(self):
@@ -215,7 +255,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
                     
                 timeReading = datetime.now()
                 logger.info("Run plan .............")
-                self.frepple.runPlan()
+                self.runUpdates()
 
 
                     

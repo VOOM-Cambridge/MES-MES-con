@@ -93,16 +93,16 @@ class MessagePublisherMulti(multiprocessing.Process):
                         if client:
                             logger.info(f"Sending message {msg_payload} to supplier at: {receiver}")
                             msg_topic = msg_topic.replace("purchase", "order")
-                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=1)
+                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=2)
                     elif receiver in self.customerNameList:
                         client = self.customer_clients.get(receiver)
                         if client:
                             logger.info(f"Sending message {msg_payload} to customer at: {receiver}")
                             msg_topic = msg_topic.replace("order", "purchase")
-                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=1)
+                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=2)
                 except zmq.ZMQError:
                     pass
 
-                if (datetime.now() - timeLast).total_seconds() > 120:
+                if (datetime.now() - timeLast).total_seconds() > 500:
                     self.mqtt_connect_call()
                     timeLast = datetime.now()

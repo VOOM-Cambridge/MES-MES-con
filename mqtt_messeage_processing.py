@@ -171,8 +171,8 @@ class MessageProcessing(multiprocessing.Process):
         # collect all order information before on delivery data and status
         startOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         self.frepple.runPlan()
-        logger.info("MQTT_processing: plan run")
-        time.sleep(2)
+        logger.info("MQTT_processing: plan run and check for updates")
+        time.sleep(4)
         endOrderData = self.frepple.findAllOrdersExtraInfo("open", ["name", "deliverydate", "status"])
         dateToUpdate =[]
         for data in endOrderData:
