@@ -33,8 +33,38 @@ name = "3D Printing Factory"
 address = "129.169.48.173"   #"129.169.232.174"
 port = 1883
 
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Design Studio Factory"
+address = "129.169.48.175"     #"129.169.232.174"
+port = 1883
+
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Gear Supplier"
+address = ""           #"129.169.232.174"
+port = 1883
+
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Metal Casing Supplier"
+address = ""                   #"129.169.232.174"
+port = 1883
+
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Fixing Supplier"
+address = ""             #"129.169.232.174"
+port = 1883
+
 [[mqtt_publish.customer]]
 # customer 1 in chain
 name = "Customer 1"
+address = "129.169.232.96" #"129.169.48.176"
+port = 1883
+
+[[mqtt_publish.customer]]
+# customer 1 in chain
+name = "Customer 2"
 address = "129.169.232.96" #"129.169.48.176"
 port = 1883
