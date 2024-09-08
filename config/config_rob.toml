@@ -29,14 +29,14 @@ spec_json = '''{"time":"$.timestamp"}'''
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "3D Printing Factory"
-address = "129.169.48.173"   #"129.169.232.174"
+name = "3D_Printing"
+address = "129.169.48.173" #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Design Studio Factory"
-address = "129.169.48.175"     #"129.169.232.174"
+name = "Design_Studio"
+address = "129.169.48.175" #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]
@@ -47,8 +47,8 @@ port = 1883
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Metal Casing Supplier"
-address = ""                   #"129.169.232.174"
+name = "Supplier"
+address = "129.169.213.88" #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]

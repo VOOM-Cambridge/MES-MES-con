@@ -1,6 +1,6 @@
 [Factory]
-name = "3D Printing Factory" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 20          #seconds
+name = "3D_Printing" #"3D Printing Factory" or "Robot Assembly Factory"
+frequencyCheck = 20  #seconds
 
 [frepple_info]
 URL = "http://localhost:9000"
@@ -29,18 +29,18 @@ spec_json = '''{"time":"$.timestamp"}'''
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "ABS material supplier" #ABS material supplier"
-address = ""                   #"129.169.48.175" "129.169.232.174"
-port = 1883
-
-[[mqtt_publish.supplier]]
-# Supplier 1 in chain
-name = "Casing Supplier" #ABS material supplier"
-address = ""             #"129.169.48.175" "129.169.232.174"
+name = "Supplier" #ABS material supplier"
+address = ""      # "129.169.48.175" "129.169.232.174"
 port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot Assembly Factory"
+name = "Robot_Assembly"
 address = "129.169.48.176"
+port = 1883
+
+[[mqtt_publish.customer]]
+# customer 1 in chain
+name = "Manual_Assembly"
+address = "129.169.48.174"
 port = 1883

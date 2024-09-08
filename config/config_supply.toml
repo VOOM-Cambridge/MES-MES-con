@@ -1,6 +1,6 @@
 [Factory]
-name = "Metal Casing Supplier" #"Fixing Supplier" or "Gear Supplier" 
-frequencyCheck = 20            #seconds
+name = "Supplier"   #"Fixing Supplier" or "Gear Supplier" 
+frequencyCheck = 20 #seconds
 
 [frepple_info]
 URL = "http://localhost:9000"
@@ -28,14 +28,20 @@ spec_json = '''{"time":"$.timestamp"}'''
 # mqtt_messege settings 
 
 
-[[mqtt_publish.customer]]
-# customer 1 in chain
-name = "Robot Assembly Factory"
-address = "129.169.48.176"
-port = 1883
+# [[mqtt_publish.customer]]
+# # customer 1 in chain
+# name = "Robot Assembly Factory"
+# address = "129.169.48.176"
+# port = 1883
+
+# [[mqtt_publish.customer]]
+# # customer 1 in chain
+# name = "Manual Assembly Factory"
+# address = "129.169.48.174"
+# port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Manual Assembly Factory"
-address = "129.169.48.174"
+name = "3D_Printing"
+address = "129.169.48.173"
 port = 1883
