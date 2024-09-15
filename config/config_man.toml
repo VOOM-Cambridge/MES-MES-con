@@ -41,7 +41,7 @@ port = 1883
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
 name = "Supplier"
-address = "129.169.213.88" #"129.169.232.174"
+address = ""      #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]

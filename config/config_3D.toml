@@ -29,8 +29,8 @@ spec_json = '''{"time":"$.timestamp"}'''
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Supplier"          #ABS material supplier"
-address = "129.169.213.88" # "129.169.48.175" "129.169.232.174"
+name = "Supplier" #ABS material supplier"
+address = ""      # "129.169.48.175" "129.169.232.174"
 port = 1883
 
 [[mqtt_publish.customer]]

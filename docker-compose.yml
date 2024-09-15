@@ -6,6 +6,7 @@ services:
         working_dir: /app
         volumes:
             - ./config:/app/config
+            - ./data:/app/data
         networks:
             internal:
                 aliases:
