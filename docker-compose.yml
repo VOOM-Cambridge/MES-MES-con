@@ -16,4 +16,5 @@ services:
 networks:
     internal:
         name: voom-network
+        #name: robotLab
         #external: true

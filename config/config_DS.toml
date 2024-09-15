@@ -3,12 +3,12 @@ name = "Design_Studio" #"3D Printing Factory" or "Robot Assembly Factory"
 frequencyCheck = 20    #seconds
 
 [frepple_info]
-URL = "http://localhost:9000"
+URL = "http://129.169.48.175:9000"
 password = "admin"
 user = "admin"
 
 [mqtt_subsciber]
-broker = "localhost" #point to the mqtt broker same ad frepple IP address
+broker = "mqtt.docker.local" #point to the mqtt broker same ad frepple IP address
 port = 1883
 
 [[mqtt_subsciber.subscription]]
@@ -29,8 +29,8 @@ spec_json = '''{"time":"$.timestamp"}'''
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Supplier"          #ABS material supplier"
-address = "129.169.213.88" #"129.169.48.175" "129.169.232.174"
+name = "Supplier" #ABS material supplier"
+address = ""      #"129.169.48.175" "129.169.232.174"
 port = 1883
 
 [[mqtt_publish.customer]]

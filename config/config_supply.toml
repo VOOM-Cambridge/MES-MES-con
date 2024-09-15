@@ -8,7 +8,7 @@ password = "admin"
 user = "admin"
 
 [mqtt_subsciber]
-broker = "localhost" #point to the mqtt broker same ad frepple IP address
+broker = "mqtt.docker.local" #point to the mqtt broker same ad frepple IP address
 port = 1883
 
 [[mqtt_subsciber.subscription]]
