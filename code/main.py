@@ -13,6 +13,7 @@ import zmq
 import MESCheckOrder
 #import mqtt_pubished
 import mqtt_publisher_multi
+import mqtt_pubished
 import mqtt_messeage_processing
 import mqtt_subscriber
 
@@ -42,8 +43,8 @@ def create_building_blocks(config):
     bbs["mqtt_subscriber"] = mqtt_subscriber.MQTTSubscriber(config, mqtt_out_forward)
     bbs["MES_order_check"] = MESCheckOrder.FreppleCheckerOrders(config, {'internal': MESIncomingProcOut, 'out': MESCheckOut})
     bbs["process_incoming"] = mqtt_messeage_processing.MessageProcessing(config, {'in': MESIncomingProcIn, 'out': MESIncomingProcOut})
-    #bbs["mqtt_publish"] = mqtt_pubished.messeagePublisher(config, publish_mqtt)
-    bbs["mqtt_publisher_multi"] = mqtt_publisher_multi.MessagePublisherMulti(config, publish_mqtt)
+    bbs["mqtt_publish"] = mqtt_pubished.messeagePublisher(config, publish_mqtt)
+    #bbs["mqtt_publisher_multi"] = mqtt_publisher_multi.MessagePublisherMulti(config, publish_mqtt)
     return bbs
 
 
