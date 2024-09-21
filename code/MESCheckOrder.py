@@ -53,6 +53,21 @@ class FreppleCheckerOrders(multiprocessing.Process):
         else:
             self.zmq_out_internal.connect(self.zmq_conf["internal"]["address"])
 
+    def changeToCompleated(self, order):
+        logger.info("update orders to completed----")
+        purchaseOrdersAll = self.frepple.findAllPurchaseOrdersOrd(order, "confirmed")
+
+        for POs in purchaseOrdersAll:
+            supplierPO = POs["supplier"] 
+            try:
+                addressToSend = self.addressSupplier[supplierPO]
+            except:
+                addressToSend = ""
+            if addressToSend == "":
+                logger.info("setting supplier POs to compleated")
+                POs["status"] = "completed"
+                self.frepple.purchaseOrderFunc("EDIT", POs)
+
     def checkPurcahseOrders(self, order):
         # find all purchase orders for new order, send purchase orders and confirm
         outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "proposed")
@@ -116,20 +131,6 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 # supplier not in list of comunciaiton ones so set to confirmed
                 outOrd["status"] = "confirmed"
                 self.frepple.purchaseOrderFunc("EDIT", outOrd)
-
-        if (outNotConfirmend == None or outNotConfirmend == []) and (outNotConfirmendAppr == None or outNotConfirmendAppr == []):
-            # update orders confirmed to compleated
-            purchaseOrdersAll = self.frepple.findAllPurchaseOrdersOrd(order, "approved")
-            for POs in purchaseOrdersAll:
-                supplierPO = POs["supplier"] 
-                try:
-                    addressToSend = self.addressSupplier[supplierPO]
-                except:
-                    addressToSend = ""
-                if addressToSend == "":
-                    logger.info("setting supplier POs to compleated")
-                    POs["status"] = "completed"
-                    self.frepple.purchaseOrderFunc("EDIT", POs)
 
 
         # update order if confirmed to open
@@ -268,6 +269,7 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 ordNew = self.frepple.findAllOrders("open")
                 for order in ordNew:
                     self.checkOrdersStillConfirmed(order)
+                    self.changeToCompleated(order)
                     
                 timeReading = datetime.now()
                 logger.info("Run plan .............")
