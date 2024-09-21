@@ -31,8 +31,8 @@ class messeagePublisher(multiprocessing.Process):
             self.zmq_in.connect(self.zmq_conf["address"])
 
     def mqtt_connect(self, client, config):
-        logger.info('connecting to '+ config["address"] + ':' + str(config["port"]))
-        connect_future = client.connect(config["address"], config["port"], 60)
+        logger.info('connecting to '+ config["broker"] + ':' + str(config["port"]))
+        connect_future = client.connect(config["broker"], config["port"], 60)
         #connect_future.result()  # will raise error on failure
 
     def on_mess(client, userdata, message):
