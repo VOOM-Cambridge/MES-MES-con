@@ -1,6 +1,6 @@
 
 services:
-    delivery-calcualtion:
+    mes-mes-connection:
         build: .
         privileged: true
         working_dir: /app
