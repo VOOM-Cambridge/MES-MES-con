@@ -1,6 +1,6 @@
 [Factory]
 name = "Design_Studio" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 20    #seconds
+frequencyCheck = 10    #seconds
 
 [frepple_info]
 URL = "http://129.169.48.175:9000"

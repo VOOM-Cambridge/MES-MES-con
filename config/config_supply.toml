@@ -1,6 +1,6 @@
 [Factory]
 name = "Supplier"   #"Fixing Supplier" or "Gear Supplier" 
-frequencyCheck = 20 #seconds
+frequencyCheck = 10 #seconds
 
 [frepple_info]
 URL = "http://localhost:9000"

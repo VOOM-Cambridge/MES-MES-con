@@ -1,6 +1,6 @@
 [Factory]
 name = "3D_Printing" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 20  #seconds
+frequencyCheck = 10  #seconds
 
 [frepple_info]
 URL = "http://frepple.docker.local:80"
