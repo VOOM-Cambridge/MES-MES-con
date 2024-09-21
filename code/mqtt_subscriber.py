@@ -38,9 +38,9 @@ class MQTTSubscriber(multiprocessing.Process):
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect
-
-        client.connect(self.url, self.port, 60)
         logger.info(f"Connecting to {self.url}:{self.port}")
+        client.connect(self.url, self.port, 60)
+        
         client.loop_forever()
 
     def on_connect(self, client, _userdata, _flags, rc):

@@ -18,6 +18,7 @@ class messeagePublisher(multiprocessing.Process):
         self.customer = mqtt_conf["customer"][0]
         self.supplierNameList = [x["name"] for x in mqtt_conf["supplier"]]
         self.customerNameList = [x["name"] for x in mqtt_conf["customer"]]
+        self.subscriber = config["mqtt_subsciber"]
 
         # declarations
         self.zmq_conf = zmq_conf
@@ -75,13 +76,12 @@ class messeagePublisher(multiprocessing.Process):
                 clientCustomer.on_publish = self.on_mess()
 
     def mqtt_connect_call(self):
-        if self.supplier["address"] !="":
-            self.clientSupply = mqtt.Client()
-            #self.mqtt_connect(self.clientSupply, self.supplier)
-            try:
-                self.mqtt_connect(self.clientSupply, self.supplier)
-            except:
-                print("Error connecteing Supplier")
+        self.clientSupply = mqtt.Client()
+        #self.mqtt_connect(self.clientSupply, self.supplier)
+        try:
+            self.mqtt_connect(self.clientSupply, self.supplier)
+        except:
+            print("Error connecteing Supplier")
         
         if self.customer["address"] !="":
             self.clientCustomer = mqtt.Client()
