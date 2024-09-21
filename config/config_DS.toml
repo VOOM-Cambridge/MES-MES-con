@@ -1,6 +1,6 @@
 [Factory]
 name = "Design_Studio" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 10    #seconds
+frequencyCheck = 20    #seconds
 
 [frepple_info]
 URL = "http://129.169.48.175:9000"
@@ -35,7 +35,7 @@ port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot_Assembly"
+name = "Robot_Lab"
 address = "129.169.48.176"
 port = 1883
 

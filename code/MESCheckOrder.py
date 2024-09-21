@@ -88,8 +88,8 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 self.frepple.purchaseOrderFunc("EDIT", outOrd)
 
         # find all purchase orders for new order no fully confirmed 
-        outNotConfirmend = self.frepple.findAllPurchaseOrdersOrd(order, "approved")
-        for outOrd in outNotConfirmend:
+        outNotConfirmendAppr= self.frepple.findAllPurchaseOrdersOrd(order, "approved")
+        for outOrd in outNotConfirmendAppr:
             logger.info("new order found to process purchases for")
             # send for new order, send messeage with purchase order
             # check if purchase orders have been confirmed if not send a messeage 
@@ -116,6 +116,21 @@ class FreppleCheckerOrders(multiprocessing.Process):
                 # supplier not in list of comunciaiton ones so set to confirmed
                 outOrd["status"] = "confirmed"
                 self.frepple.purchaseOrderFunc("EDIT", outOrd)
+
+        if (outNotConfirmend == None or outNotConfirmend == []) and (outNotConfirmendAppr == None or outNotConfirmendAppr == []):
+            # update orders confirmed to compleated
+            purchaseOrdersAll = self.frepple.findAllPurchaseOrdersOrd(order, "approved")
+            for POs in purchaseOrdersAll:
+                supplierPO = POs["supplier"] 
+                try:
+                    addressToSend = self.addressSupplier[supplierPO]
+                except:
+                    addressToSend = ""
+                if addressToSend == "":
+                    logger.info("setting supplier POs to compleated")
+                    POs["status"] = "completed"
+                    self.frepple.purchaseOrderFunc("EDIT", POs)
+
 
         # update order if confirmed to open
         self.checkOrdersConfirmed(order)
