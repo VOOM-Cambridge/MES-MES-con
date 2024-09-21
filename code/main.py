@@ -20,7 +20,7 @@ logger = logging.getLogger("main")
 logging.basicConfig(level=logging.DEBUG)  # move to log config file using python functionality
 
 def get_config():
-    with open("./config/config_man.toml", "rb") as f:
+    with open("./config/config_rob.toml", "rb") as f:
         toml_conf = tomli.load(f)
     logger.info(f"config:{toml_conf}")
     return toml_conf

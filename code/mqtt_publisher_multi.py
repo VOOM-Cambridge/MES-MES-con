@@ -17,6 +17,7 @@ class MessagePublisherMulti(multiprocessing.Process):
         self.customers = mqtt_conf["customer"]
         self.supplierNameList = [x["name"] for x in mqtt_conf["supplier"]]
         self.customerNameList = [x["name"] for x in mqtt_conf["customer"]]
+        self.publisher = config['mqtt_subscriber']
 
         # Declarations
         self.zmq_conf = zmq_conf
@@ -51,27 +52,15 @@ class MessagePublisherMulti(multiprocessing.Process):
                     return
 
     def mqtt_connect_call(self):
-        for supplier in self.suppliers:
-            if supplier["address"]:
-                client = mqtt.Client()
-                client.on_disconnect = self.on_disconnect
-                client.on_message = self.on_mess
-                try:
-                    self.mqtt_connect(client, supplier)
-                    self.supplier_clients[supplier["name"]] = client
-                except Exception as e:
-                    logger.error(f"Error connecting to supplier {supplier['name']}: {e}")
 
-        for customer in self.customers:
-            if customer["address"]:
-                client = mqtt.Client()
-                client.on_disconnect = self.on_disconnect
-                client.on_message = self.on_mess
-                try:
-                    self.mqtt_connect(client, customer)
-                    self.customer_clients[customer["name"]] = client
-                except Exception as e:
-                    logger.error(f"Error connecting to customer {customer['name']}: {e}")
+        client = mqtt.Client()
+        client.on_disconnect = self.on_disconnect
+        client.on_message = self.on_mess
+        try:
+            self.mqtt_connect(client, self.publisher)
+            self.client = client
+        except Exception as e:
+            logger.error(f"Error connecting to localhost : {e}")
 
     def run(self):
         self.do_connect()
@@ -81,28 +70,24 @@ class MessagePublisherMulti(multiprocessing.Process):
         run = True
         while run:
             while self.zmq_in.poll(50, zmq.POLLIN):
-                try:
-                    msg = self.zmq_in.recv(zmq.NOBLOCK)
-                    msg_json = json.loads(msg)
-                    msg_topic = msg_json['topic']
-                    msg_payload = msg_json['payload']
-                    receiver = msg_json["send to"]
+                msg = self.zmq_in.recv(zmq.NOBLOCK)
+                msg_json = json.loads(msg)
+                msg_topic = msg_json['topic']
+                msg_payload = msg_json['payload']
+                receiver = msg_json["send to"]
 
-                    if receiver in self.supplierNameList:
-                        client = self.supplier_clients.get(receiver)
-                        if client:
-                            logger.info(f"Sending message {msg_payload} to supplier at: {receiver}")
-                            msg_topic = msg_topic.replace("purchase", "order")
-                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=1, retain=True)
-                    elif receiver in self.customerNameList:
-                        client = self.customer_clients.get(receiver)
-                        if client:
-                            logger.info(f"Sending message {msg_payload} to customer at: {receiver}")
-                            msg_topic = msg_topic.replace("order", "purchase")
-                            client.publish(topic=msg_topic, payload=json.dumps(msg_payload), qos=1, retain=True)
-                except zmq.ZMQError:
-                    pass
+                if receiver in self.supplierNameList:
+                    logger.info(f"Sending message {msg_payload} to supplier at: {receiver}")
+                    msg_topic = msg_topic.replace("purchase", "order")
+                    msg_topic_out = receiver + "/" + msg_topic
+                    client.publish(topic=msg_topic_out, payload=json.dumps(msg_payload), qos=1)
+                elif receiver in self.customerNameList:
+                    client = self.customer_clients.get(receiver)
+                    logger.info(f"Sending message {msg_payload} to customer at: {receiver}")
+                    msg_topic = msg_topic.replace("order", "purchase")
+                    msg_topic_out = receiver + "/" + msg_topic
+                    client.publish(topic=msg_topic_out, payload=json.dumps(msg_payload), qos=1)
 
-                # if (datetime.now() - timeLast).total_seconds() > 100:
-                #     self.mqtt_connect_call()
-                #     timeLast = datetime.now()
+            if (datetime.now() - timeLast).total_seconds() > 100:
+                self.mqtt_connect_call()
+                timeLast = datetime.now()

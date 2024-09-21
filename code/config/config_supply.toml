@@ -1,9 +1,9 @@
 [Factory]
-name = "3D_Printing" #"3D Printing Factory" or "Robot Assembly Factory"
-frequencyCheck = 20  #seconds
+name = "Supplier"   #"Fixing Supplier" or "Gear Supplier" 
+frequencyCheck = 20 #seconds
 
 [frepple_info]
-URL = "http://frepple.docker.local:80"
+URL = "http://localhost:9000"
 password = "admin"
 user = "admin"
 
@@ -27,20 +27,21 @@ spec_json = '''{"time":"$.timestamp"}'''
 [mqtt_publish]
 # mqtt_messege settings 
 
-[[mqtt_publish.supplier]]
-# Supplier 1 in chain
-name = "Supplier" #ABS material supplier"
-address = ""      # "129.169.48.175" "129.169.232.174"
-port = 1883
+
+# [[mqtt_publish.customer]]
+# # customer 1 in chain
+# name = "Robot Assembly Factory"
+# address = "129.169.48.176"
+# port = 1883
+
+# [[mqtt_publish.customer]]
+# # customer 1 in chain
+# name = "Manual Assembly Factory"
+# address = "129.169.48.174"
+# port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot_Lab"
-address = "129.169.48.176"
-port = 1883
-
-[[mqtt_publish.customer]]
-# customer 1 in chain
-name = "Manual_Assembly"
-address = "129.169.48.174"
+name = "3D_Printing"
+address = "129.169.48.173"
 port = 1883

@@ -1,14 +1,14 @@
 [Factory]
-name = "Manual_Assembly" #"3D Printing or Robot Lab"
-frequencyCheck = 20      #seconds
+name = "Robot_Assembly" #"3D Printing or Robot Lab"
+frequencyCheck = 20     #seconds
 
 [frepple_info]
-URL = "http://129.169.48.174:9000"
+URL = "http://129.169.48.176:9000"
 password = "admin"
 user = "admin"
 
 [mqtt_subsciber]
-broker = "129.169.48.174" #point to the mqtt broker same ad frepple IP address
+broker = "129.169.48.176" #point to the mqtt broker same ad frepple IP address
 port = 1883
 
 [[mqtt_subsciber.subscription]]
@@ -26,6 +26,7 @@ spec_json = '''{"time":"$.timestamp"}'''
 
 [mqtt_publish]
 # mqtt_messege settings 
+
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
 name = "3D_Printing"
@@ -40,14 +41,21 @@ port = 1883
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Supplier"
-address = ""      #"129.169.232.174"
+name = "Manual_Assembly"
+address = "129.169.48.174"
+port = 1883
+
+
+[[mqtt_publish.supplier]]
+# Supplier 1 in chain
+name = "Gear Supplier"
+address = ""           #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]
 # Supplier 1 in chain
-name = "Metal Casing Supplier"
-address = ""                   #"129.169.232.174"
+name = "Supplier"
+address = ""      #"129.169.232.174"
 port = 1883
 
 [[mqtt_publish.supplier]]
@@ -58,12 +66,12 @@ port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot_Lab"
-address = "129.169.48.176"
+name = "Customer 1"
+address = ""        #"129.169.48.176"
 port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Supplier"
-address = ""
+name = "Customer 2"
+address = ""        #"129.169.48.176"
 port = 1883

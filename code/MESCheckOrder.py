@@ -22,7 +22,9 @@ class FreppleCheckerOrders(multiprocessing.Process):
         self.topic = "MES/order/" + config["Factory"]["name"] +"/new/"
         self.frequency = config["Factory"]["frequencyCheck"]
         self.supplier = config["mqtt_publish"]["supplier"]
+        print()
         self.supplierNameList = [x["name"] for x in self.supplier]
+        print(self.supplierNameList)
         self.customer = config["mqtt_publish"]["customer"]
         self.customerNameList = [x["name"] for x in self.customer]
         self.addressSupplier ={}

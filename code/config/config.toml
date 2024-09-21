@@ -3,12 +3,12 @@ name = "3D_Printing" #"3D Printing Factory" or "Robot Assembly Factory"
 frequencyCheck = 20  #seconds
 
 [frepple_info]
-URL = "http://frepple.docker.local:80"
+URL = "http://localhost:9000"
 password = "admin"
 user = "admin"
 
 [mqtt_subsciber]
-broker = "mqtt.docker.local" #point to the mqtt broker same ad frepple IP address
+broker = "localhost" #point to the mqtt broker same ad frepple IP address
 port = 1883
 
 [[mqtt_subsciber.subscription]]
@@ -35,7 +35,7 @@ port = 1883
 
 [[mqtt_publish.customer]]
 # customer 1 in chain
-name = "Robot_Lab"
+name = "Robot_Assembly"
 address = "129.169.48.176"
 port = 1883
 
